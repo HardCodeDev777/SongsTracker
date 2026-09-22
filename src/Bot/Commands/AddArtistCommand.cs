@@ -53,6 +53,8 @@ public class AddArtistCommand(IMusicService musicService,
 
         if (dbArtist is null)
         {
+            logger.LogInformation("No such artist in db");
+
             var responseIdAndName = await musicService
                 .GetArtistIdAndFullnameByName(artistName, cancellationToken);
 
@@ -72,9 +74,16 @@ public class AddArtistCommand(IMusicService musicService,
             {
                 Id = responseIdAndName.Id,
                 Name = responseIdAndName.Name,
-                LastReleaseDate = responseLatestSong!.ReleaseDate // For tests: new DateTime(2018, 2, 14)
+                LastReleaseDate = responseLatestSong!.ReleaseDate.ToUniversalTime() // For tests: new DateTime(2018, 2, 14)
             };
             dbContext.UniqueArtists.Add(dbArtist);
+
+            await bot.SendMessage(message.Chat, $"Artist latest song: \n Name: {responseLatestSong.Title} " +
+                $"\n Release date: {responseLatestSong.ReleaseDate}", cancellationToken: cancellationToken);
+        }
+        else
+        {
+            logger.LogInformation("Artist already exist");
         }
 
         dbUser.TrackedArtists.Add(dbArtist);

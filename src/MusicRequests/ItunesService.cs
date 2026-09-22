@@ -36,8 +36,9 @@ public class ItunesService(HttpClient httpClient,
     public async Task<SongShortModel?> GetLatestSongShortData(long artistId, 
         CancellationToken cancellationToken)
     {
+        // ITunes sucks, recent sort doesn't work.
         var url =
-            $"https://itunes.apple.com/lookup?id={artistId}&entity=album&limit=5&sort=recent";
+            $"https://itunes.apple.com/lookup?id={artistId}&entity=album&limit=200";
         logger.LogInformation($"Final url: {url}");
 
         var artistFullInfo = await httpClient
@@ -55,6 +56,17 @@ public class ItunesService(HttpClient httpClient,
             return null;
         }
 
-        return new(artistFullInfo.results[1].collectionName, artistFullInfo.results[1].releaseDate);
+        var latestReleases = artistFullInfo.results
+            .Skip(1) // First is always artist metadata
+            .OrderByDescending(x => x.releaseDate)
+            .FirstOrDefault();
+
+        if (latestReleases is null)
+        {
+            logger.LogError("Couldn't parse latest release!");
+            return null;
+        }
+
+        return new(latestReleases.collectionName, latestReleases.releaseDate);
     }
 }

@@ -37,7 +37,7 @@ public class SongsTrackWorker(IServiceScopeFactory scopeFactory,
             if (artistLatestSong is not null 
                 && artistLatestSong.ReleaseDate > artist.LastReleaseDate)
             {
-                artist.LastReleaseDate = artistLatestSong.ReleaseDate;
+                artist.LastReleaseDate = artistLatestSong.ReleaseDate.ToUniversalTime();
                 logger.LogInformation($"{artist.Name} dropped new song: {artistLatestSong.Title} \n" +
                     $"Date: {artistLatestSong.ReleaseDate}");
 
@@ -47,6 +47,9 @@ public class SongsTrackWorker(IServiceScopeFactory scopeFactory,
                     $"Date: {artistLatestSong.ReleaseDate}", 
                         cancellationToken: stoppingToken);             
             }
+
+            // To avoid blocking
+            await Task.Delay(2000, stoppingToken);
         }
 
         await dbContext.SaveChangesAsync(stoppingToken);

@@ -61,7 +61,10 @@ public class RemoveArtistCommand(TrackerDbContext dbContext,
         dbArtist.Followers.Remove(dbUser);
 
         if (dbArtist.Followers.Count == 0)
+        {
+            logger.LogInformation("Arist has no followers. Removing from db");
             dbContext.UniqueArtists.Remove(dbArtist);
+        }
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
